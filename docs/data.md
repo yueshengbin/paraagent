@@ -24,7 +24,7 @@ hf download ShengbinYue/paraagent-sft paraagent-sft.jsonl \
   --repo-type dataset --local-dir data/sft
 ```
 
-`data/dataset_info.json` registers ParaAgent's ShareGPT conversations and ToolEnv's Alpaca examples. Training cutoffs are 20,000 and 4,096 tokens respectively. SFT task IDs are independent of RL IDs.
+`data/dataset_info.json` registers ParaAgent's ShareGPT conversations and ToolEnv's Alpaca examples.
 
 ## RL data
 
