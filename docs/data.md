@@ -6,8 +6,7 @@
 |---|---|
 | `data/sft/paraagent-sft.jsonl` | ParaAgent SFT trajectories |
 | `data/sft/toolenv-sft.jsonl` | ToolEnv simulator examples |
-| `data/rl/paraagent-rl/{train,validation}.jsonl` | HF source tasks |
-| `data/rl/paraagent-rl/{train,validation}.parquet` | Training and validation tasks |
+| `data/rl/paraagent-rl/{train,validation}.{jsonl,parquet}` | RL source files and converted training inputs |
 | `data/rl/paraagent-rl/{state,full_db,policies}/` | Simia task states, databases and policies |
 | `data/toolenv/` | Tool catalog, index, caches and dependency graph |
 | `data/benchmarks/toolbench/` | Queries, retrieval corpus/index, schemas and cache |
