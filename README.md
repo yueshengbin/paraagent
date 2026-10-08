@@ -49,7 +49,7 @@ We introduce **ParaAct**, a structured parallel-action loop that combines phase-
 
 ---
 
-**ParaAgent resources:**
+**We will open-source the following resources:**
 
 1. **Datasets**
    - [ParaAgent SFT dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-sft).
