@@ -54,7 +54,7 @@ We introduce **ParaAct**, a structured parallel-action loop that combines phase-
 1. **Datasets**
    - [ParaAgent SFT dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-sft).
    - [ParaAgent RL dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-rl).
-   - [ToolEnv SFT dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft) — data files pending.
+   - [ToolEnv SFT dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft).
 2. **Models**
    - ParaAgent-4B model weights — coming soon.
    - ToolEnv-14B model weights — coming soon.
