@@ -99,31 +99,7 @@ The installation layout follows [Agent-R1's framework-first setup](https://githu
 
 ## Data
 
-Large datasets and runtime resources are distributed separately from the Python wheel. Preserve the following paths:
-
-| Path | Contents |
-|---|---|
-| `data/sft/paraagent-sft.jsonl` | 10,906 ParaAgent SFT trajectories |
-| `data/sft/toolenv-sft.jsonl` | 243,445 ToolEnv SFT examples |
-| `data/rl/paraagent-rl/train.parquet` | 16,384 RL prompts |
-| `data/rl/paraagent-rl/validation.parquet` | 124 RL validation prompts |
-| `data/rl/paraagent-rl/{state,full_db,policies}` | stateful native-task resources |
-| `data/toolenv/` | ToolEnv catalog, index, caches and dependency graph |
-| `data/benchmarks/toolbench/` | 765 ToolBench tasks and matching runtime resources |
-| `data/benchmarks/apibank/` | 50 API-Bank Level-3 tasks and 21 local APIs |
-
-Download the published ParaAgent SFT dataset with:
-
-```bash
-hf download ShengbinYue/paraagent-sft paraagent-sft.jsonl \
-  --repo-type dataset --local-dir data/sft
-```
-
-The [ParaAgent RL dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-rl) is also published on Hugging Face. The [ToolEnv SFT repository](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft) currently contains its dataset card; data files are pending.
-
-Public download locations for the remaining runtime resources are pending. `data/manifest.json` records the assembled companion bundle and its SHA-256 checksums. Do not mix catalogs, indexes, schemas, caches or graphs from different snapshots.
-
-See [data and resources](docs/data.md) and [the data bundle notes](data/README.md).
+See the [data guide](docs/data.md) for dataset structure, downloads and validation.
 
 ## Training
 
