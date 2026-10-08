@@ -37,7 +37,7 @@ Language-model agents increasingly operate in **open-world tool environments**, 
 
 <div align="center"><sub><b>Paradigm comparison.</b> ParaAgent coordinates adaptive phase transitions with parallel actions inside each phase.</sub></div>
 
-We introduce **ParaAct**, a structured parallel-action loop that combines phase-level `Exploration ↔ Execution` with action-level parallelism. Exploration parallelism identifies required capability slots and retrieves them concurrently; execution parallelism organizes selected tools into a directed acyclic graph (DAG) and executes dependency-independent calls in parallel.
+We introduce **ParaAct**, a structured parallel-action loop that combines phase-level `Exploration ↔ Execution` with action-level parallelism. Exploration parallelism identifies required capability slots and retrieves them concurrently; execution parallelism organizes selected tools into a DAG and executes dependency-independent calls in parallel.
 
 **ParaAgent** learns this loop from multi-agent cold-start demonstrations followed by reinforcement learning with multi-level advantage decoupling. Explicit phase plans expose structural decisions, while step-, phase- and trajectory-level rewards supervise protocol compliance, dependency-aware coordination and task outcomes. Training is supported by **ToolEnv**, a scalable simulator built from realistic tool interfaces and request-response interactions.
 
