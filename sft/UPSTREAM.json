@@ -1,0 +1,27 @@
+{
+  "project": "LLaMA-Factory",
+  "repository": "https://github.com/hiyouga/LLaMA-Factory",
+  "revision": "62ae362455801d4900a5132c7a30b23dc5fc3802",
+  "license": "Apache-2.0",
+  "snapshot_directory": "LLaMA-Factory",
+  "included_upstream_paths": [
+    "src",
+    "requirements",
+    "pyproject.toml",
+    "MANIFEST.in",
+    "LICENSE",
+    "README.md",
+    "README_zh.md",
+    "CITATION.cff"
+  ],
+  "excluded_within_included_paths": [
+    "src/llamafactory/train/test_utils.py",
+    "src/llamafactory/v1/utils/pytest.py"
+  ],
+  "source_file_modifications": [],
+  "scope": "Runtime snapshot, not a full upstream mirror. Other upstream paths, Git metadata, caches and training artifacts are not included.",
+  "documentation_file_modifications": [
+    "README.md",
+    "README_zh.md"
+  ]
+}

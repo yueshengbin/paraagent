@@ -1,0 +1,39 @@
+# ToolEnv simulator supervised fine-tuning (Qwen3-14B).
+# Run from the repository root; see docs/training.md.
+model_name_or_path: Qwen/Qwen3-14B
+stage: sft
+do_train: true
+finetuning_type: full
+
+dataset: toolenv-sft
+dataset_dir: data
+template: qwen3_nothink
+cutoff_len: 4096
+train_on_prompt: false
+mask_history: false
+packing: false
+
+# Training settings reported in the paper.
+optim: adamw_torch
+learning_rate: 1.0e-5
+num_train_epochs: 2.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+
+# Runtime defaults; batch geometry and precision are configurable.
+deepspeed: configs/deepspeed/zero2.json
+bf16: true
+gradient_checkpointing: true
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 16
+preprocessing_num_workers: 16
+dataloader_num_workers: 4
+seed: 42
+
+output_dir: outputs/toolenv-sft
+logging_steps: 10
+save_strategy: steps
+save_steps: 1000
+save_only_model: false
+overwrite_output_dir: false
+report_to: none

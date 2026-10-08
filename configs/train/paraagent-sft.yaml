@@ -1,0 +1,39 @@
+# ParaAgent cold-start supervised fine-tuning (Qwen3-4B).
+# Run from the repository root; see docs/training.md.
+model_name_or_path: Qwen/Qwen3-4B
+stage: sft
+do_train: true
+finetuning_type: full
+
+dataset: paraagent-sft
+dataset_dir: data
+template: qwen3_nothink
+cutoff_len: 20000
+train_on_prompt: false
+mask_history: false
+packing: false
+
+# Training settings reported in the paper.
+optim: adamw_torch
+learning_rate: 1.0e-5
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+
+# Runtime defaults; batch geometry and precision are configurable.
+deepspeed: configs/deepspeed/zero3.json
+bf16: true
+gradient_checkpointing: true
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 16
+preprocessing_num_workers: 16
+dataloader_num_workers: 4
+seed: 42
+
+output_dir: outputs/paraagent-sft
+logging_steps: 10
+save_strategy: steps
+save_steps: 50
+save_only_model: false
+overwrite_output_dir: false
+report_to: none
