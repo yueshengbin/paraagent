@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+outputs/
+.env
+.env.*
+!.env.example
+# Full datasets are distributed separately from the source package.
+data/sft/*.json
+data/sft/*.jsonl
+data/rl/
+data/toolenv/
+data/benchmarks/
+
+third_party/verl/
+third_party/LLaMA-Factory/
