@@ -39,7 +39,7 @@ Language-model agents increasingly operate in **open-world tool environments**, 
 
 We introduce **ParaAct**, a structured parallel-action loop that combines phase-level `Exploration ↔ Execution` with action-level parallelism. Exploration parallelism identifies required capability slots and retrieves them concurrently; execution parallelism organizes selected tools into a DAG and executes dependency-independent calls in parallel.
 
-**ParaAgent** learns this loop from multi-agent cold-start demonstrations followed by reinforcement learning with multi-level advantage decoupling. Explicit phase plans expose structural decisions, while step-, phase- and trajectory-level rewards supervise protocol compliance, dependency-aware coordination and task outcomes. Training is supported by **ToolEnv**, a scalable simulator built from realistic tool interfaces and request-response interactions.
+**ParaAgent** learns this loop from multi-agent cold-start demonstrations followed by reinforcement learning with multi-level advantage decoupling. Explicit phase plans expose structural decisions, while step-, phase- and trajectory-level rewards supervise protocol compliance, dependency-aware coordination and task outcomes. Training is supported by **ToolEnv**, a scalable environment built from realistic tool interfaces.
 
 <div align="center">
 <img src="assets/method-overview.png" alt="Overview of the ParaAgent framework" width="100%">
@@ -52,9 +52,9 @@ We introduce **ParaAct**, a structured parallel-action loop that combines phase-
 **Resources**
 
 1. **Datasets**
-   - [ParaAgent SFT dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-sft): 10,896 multi-turn demonstrations across ToolBench, Toucan and AFM for learning structured parallel tool use.
-   - [ParaAgent RL dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-rl): 16,384 tasks across ToolBench, Toucan and Simia for training adaptive, dependency-aware tool use.
-   - [ToolEnv SFT dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft): 243,445 API request–response examples for training the tool simulator (data files coming soon).
+   - [ParaAgent SFT dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-sft).
+   - [ParaAgent RL dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-rl).
+   - [ToolEnv SFT dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft).
 
 2. **Models**
    - ParaAgent-4B model weights — coming soon.
