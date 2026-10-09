@@ -41,8 +41,6 @@ We introduce **ParaAct**, a structured parallel-action loop that combines phase-
 
 **ParaAgent** learns this loop from multi-agent cold-start demonstrations followed by reinforcement learning with multi-level advantage decoupling. Explicit phase plans expose structural decisions, while step-, phase- and trajectory-level rewards supervise protocol compliance, dependency-aware coordination and task outcomes. Training is supported by **ToolEnv**, a scalable simulator built from realistic tool interfaces and request-response interactions.
 
-This code release contains training, ToolEnv and ParaAct components. ToolBench and API-Bank evaluation code and benchmark data are not included.
-
 <div align="center">
 <img src="assets/method-overview.png" alt="Overview of the ParaAgent framework" width="100%">
 </div>
@@ -71,15 +69,16 @@ paraagent/
 │   ├── rewards/           trajectory, phase and format rewards
 │   ├── toolenv/           ToolEnv runtime, simulator and retrieval service
 │   ├── paraact/           inference loop, protocols and model clients
+│   ├── evaluation/        ToolBench and API-Bank adapters and scorers
 │   └── data/              portable data validation
 ├── sft/LLaMA-Factory/     pinned SFT training-source snapshot
-├── configs/               training, runtime and prompt settings
+├── configs/               training, runtime, prompt and evaluation settings
 ├── scripts/
 │   ├── train/             ToolEnv SFT, ParaAgent SFT/RL and export launchers
 │   ├── serve/             ToolEnv, policy and judge serving launchers
 │   ├── data/              RL JSONL-to-Parquet conversion and retrieval indexing
 │   └── setup/             isolated vLLM CuMem compatibility build
-├── data/                  dataset registry and download notes
+├── data/                  training data, benchmark data and runtime resources
 ├── patches/               pinned verl and vLLM runtime patches
 ├── requirements/          SFT/serving and RL dependencies with key versions pinned
 └── docs/                  installation and usage guides
@@ -91,7 +90,7 @@ Prepare the framework environment first, check the data, then run the correspond
 
 | Environment | Frameworks | Used for |
 |---|---|---|
-| `paraagent` | LLaMA-Factory + DeepSpeed; vLLM 0.19.0 | both SFT stages, model services and retrieval |
+| `paraagent` | LLaMA-Factory + DeepSpeed; vLLM 0.19.0 | both SFT stages, model services, retrieval and evaluation |
 | `paraagent-rl` | pinned verl + vLLM 0.11.0 | RL training and policy rollouts |
 
 Follow the [installation guide](docs/installation.md) to create the environments and run the setup checks. ParaAgent SFT and ToolEnv SFT share `paraagent` with the standalone model services. Each service runs in a separate process with its own GPU assignment. RL calls these services over HTTP; its rollout engine stays inside `paraagent-rl`.
@@ -174,19 +173,27 @@ Default service endpoints are:
 
 | Service | Endpoint | Used by |
 |---|---|---|
-| ToolEnv simulator | `http://127.0.0.1:12345/v1` | RL |
+| ToolEnv simulator | `http://127.0.0.1:12345/v1` | RL and ToolBench cache misses |
 | ParaAgent policy | `http://127.0.0.1:8000/v1` | ParaAct inference |
 | RL answer judge | `http://127.0.0.1:22456/v1` | RL reward computation |
 
-Start the ToolEnv retriever:
+Start the retriever for the required catalog:
 
 ```bash
 toolenv-retriever --catalog toolenv --port 30400
+toolenv-retriever --catalog toolbench --port 30401
+toolenv-retriever --catalog apibank --port 30403
 ```
 
 The retriever uses the prepared BGE-large-en-v1.5 index. Set `--model BAAI/bge-large-en-v1.5` explicitly when required. To generate embeddings and indexes from the tool corpora, see [Build retrieval indexes](docs/inference.md#build-retrieval-indexes).
 
 See [runtime services and inference](docs/inference.md) for service parameters and runtime behavior.
+
+## Evaluation
+
+Run ParaAgent or GPT-ReAct on ToolBench and API-Bank with `paraact`; score predictions with `paraagent-eval`. ToolBench supports local simulation, StableToolBench GPT/cache (`virtual`), MirrorAPI (`mirrorapi`) and real API calls (`live`).
+
+See [evaluation](docs/evaluation.md) for setup, backend selection, API keys, commands and metrics.
 
 ## Configuration reference
 
@@ -198,6 +205,10 @@ See [runtime services and inference](docs/inference.md) for service parameters a
 | ToolEnv runtime | `configs/toolenv/runtime.yaml` |
 | ToolEnv simulator | `configs/toolenv/simulator.yaml` |
 | ParaAgent system prompt | `configs/prompts/paraagent.txt` |
+| Evaluation API key variables | `.env.example` |
+| GPT-ReAct inference API | `configs/eval/inference-react.example.json` |
+| ParaAgent inference API | `configs/eval/inference-paraagent.example.json` |
+| ToolBench scoring API | `configs/eval/scoring.example.json` |
 
 ## Acknowledgements
 

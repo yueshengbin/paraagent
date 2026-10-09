@@ -276,8 +276,8 @@ def main():
     global DEFAULT_TOP_K
     import argparse
     from pathlib import Path
-    parser = argparse.ArgumentParser(description="ToolEnv BGE/FAISS retrieval service")
-    parser.add_argument('--catalog', choices=['toolenv'], required=True)
+    parser = argparse.ArgumentParser(description="ToolEnv and benchmark BGE/FAISS retrieval service")
+    parser.add_argument('--catalog', choices=['toolenv', 'toolbench', 'apibank'], required=True)
     parser.add_argument('--root', type=Path, default=Path.cwd())
     parser.add_argument('--model', default='BAAI/bge-large-en-v1.5')
     parser.add_argument('--device', default='cpu')
@@ -290,6 +290,8 @@ def main():
     DEFAULT_TOP_K = args.top_k
     resources = {
         'toolenv': ('data/toolenv', 'toolcorpus_all.tsv', 'tool-corpus_all_index_HNSW64.bin', 30400),
+        'toolbench': ('data/benchmarks/toolbench', 'corpus.tsv', 'index.bin', 30401),
+        'apibank': ('data/benchmarks/apibank', 'corpus.json', 'index.bin', 30403),
     }
     directory, corpus_file, index_file, port = resources[args.catalog]
     base = args.root.resolve() / directory

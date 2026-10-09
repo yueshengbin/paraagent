@@ -1,0 +1,5 @@
+{
+  "model": "gpt-4.1-2025-04-14",
+  "base_url": "https://api.openai.com/v1",
+  "api_key_env": "REACT_API_KEY"
+}

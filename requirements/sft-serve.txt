@@ -1,5 +1,5 @@
 # Run from the repository root in paraagent (Python 3.12).
-# Shared LLaMA-Factory SFT, vLLM serving and retrieval environment.
+# Shared LLaMA-Factory SFT, vLLM serving, retrieval and evaluation environment.
 -e .[retrieval]
 -e sft/LLaMA-Factory
 

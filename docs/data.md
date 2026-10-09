@@ -9,6 +9,8 @@
 | `data/rl/paraagent-rl/{train,validation}.{jsonl,parquet}` | RL source files |
 | `data/rl/paraagent-rl/{state,full_db,policies}/` | Simia task states, databases and policies |
 | `data/toolenv/` | Tool catalog, index, caches and dependency graph |
+| `data/benchmarks/toolbench/` | Queries, retrieval corpus/index, schemas and cache |
+| `data/benchmarks/apibank/` | Queries, tool corpus/index, Python APIs and databases |
 
 Use matching schemas, indexes, caches and graphs. See [bundle notes](../data/README.md) and [index building](inference.md#build-retrieval-indexes).
 

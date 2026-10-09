@@ -16,10 +16,12 @@ retrieval = ["faiss-cpu", "FlagEmbedding", "fastapi", "uvicorn"]
 
 [project.scripts]
 paraagent-rl = "paraagent.training.launch:main"
+paraact = "paraagent.evaluation.run:main"
+paraagent-eval = "paraagent.evaluation.score:main"
 toolenv-retriever = "paraagent.toolenv.retriever:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-paraagent = ["training/config/*.yaml", "training/config/overrides/*.yaml", "toolenv/runtime/tools/*.yml"]
+paraagent = ["training/config/*.yaml", "training/config/overrides/*.yaml", "toolenv/runtime/tools/*.yml", "evaluation/toolbench/judge/completeness/*.yaml", "evaluation/toolbench/judge/completeness/*.txt"]

@@ -1,0 +1,86 @@
+<function>
+<name>check_answer_status</name>
+<description>
+Giving the query and answer, you need give `answer_status` of the answer.
+
+Judge only whether the final answer completely fulfills every part the user asked for. Do not judge whether the data looks real or plausible. You only see the final answer here, so confirming that results were actually delivered needs the execution detail.
+
+1. If the answer is empty, a refusal, a give-up, defers the work back to the user, or leaves a requested part unaddressed, return "Unsolved".
+2. If the answer appears to address every requested part, return "Unsure" so the detailed check can confirm the results are real.
+3. Return "Solved" only when the query needs no tool result to verify and every requested part is plainly answered.
+
+Query:
+{query}
+Answer:
+{answer}
+
+Now give your reason in "content" and `answer_status` of JSON to `check_answer_status`.
+</description>
+</function>
+
+<function>
+<name>parse_answer_status</name>
+<description>
+Giving the query and the execution detail of an answer, you need give `answer_status`.
+
+Use the messages in the 'tool' nodes as the ground truth. Judge whether the final answer presents a real result for every part the user asked for. Do not judge real-world truth or plausibility; synthetic or placeholder values from the tools are valid results.
+
+1. If a requested part is missing, deferred, or only claimed without its result actually presented, return "Unsolved".
+2. If the answer claims a result that no successful tool call supports (its relevant tool calls failed and it produced nothing real for that part), return "Unsolved".
+3. If a stated result contradicts the tool output it is based on, return "Unsolved".
+4. If every requested part has a real result presented and consistent with the tool outputs, return "Solved". A part counts as delivered as long as some successful tool call supports it, even if other calls failed.
+5. If the execution detail does not let you tell, return "Unsure".
+
+Query:
+{query}
+Answer:
+{answer}
+
+Now give your reason in "content" and `answer_status` of JSON to `parse_answer_status`.
+</description>
+</function>
+
+<function>
+<name>check_task_solvable</name>
+<description>
+Please check whether the given task solvable with following rules:
+1. If the `query` provide invalid information (e.g. invalid email address or phone number), return "Unsolvable"
+2. If the `query` needs more information to solve (e.g. the target restaurant name in a navigation task), return "Unsolvable"
+3. If you are unable to draw a conclusion, return "Unsure"
+4. If the currently `available_tools` are enough to solve the query, return "Solvable"
+
+Task:
+{task}
+
+Now give your reason in "content" and `task_status` of JSON to `check_task_solvable`.
+</description>
+</function>
+
+
+
+<function>
+<name>select_better_answer</name>
+<description>
+Query:
+{query}
+
+Answer_0:
+{answer_0}
+
+Answer_1:
+{answer_1}
+
+Given above query and answers in JSON format, you must follow the rules to select the relatively better answer and give the index of the answer **(0 for Answer_0, 1 for Answer_1)**:
+1. Compare the value of "final_answer" in following aspects:
+- Informative: whether it contains all necessary information to reply to the query.
+- Factuality: whether it accurately describes what has been done, and what failed in the end.
+- Reasoning: If answer does not solve the query, whether gives a detailed and accurate reason for failure.
+2. If you cannot determine yet, compare the value of "answer_details" in following aspects:
+- Tool calling costs: calculating the percentage of failed and replicated tools calling.
+- Running costs: calculating the total tokens T used in execution.
+- Milestone: calculating the milestone(fixed subtasks) reached in execution.
+- Exploration: whether tries potential useful tools in execution. Just count times of successful tool calling with different tools/arguments in execution.
+
+If you have made your decision, calling `select_better_answer`, else if you cannot determine, select a random answer.
+</description>
+</function>

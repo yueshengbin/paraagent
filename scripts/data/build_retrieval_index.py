@@ -19,15 +19,28 @@ from paraagent.toolenv.retrieval_resources import file_sha256, load_corpus_snaps
 
 CATALOGS = {
     "toolenv": ("data/toolenv/toolcorpus_all.tsv", "tool-corpus_all_index_HNSW64.bin", "HNSW64"),
+    "toolbench": ("data/benchmarks/toolbench/corpus.tsv", "index.bin", "HNSW64"),
+    "apibank": ("data/benchmarks/apibank/corpus.json", "index.bin", "Flat"),
 }
 QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
 
 
 def retrieval_text(document, catalog):
-    """Use the ToolEnv embedding text format."""
-    if catalog != "toolenv":
-        raise ValueError(f"Unknown catalog: {catalog}")
-    return document_to_ir_text(document)
+    """Keep each catalog's original embedding text format."""
+    if catalog == "toolenv":
+        return document_to_ir_text(document)
+    if catalog == "toolbench":
+        return (
+            f"{document.get('category', '') or ''}, {document.get('name', '') or ''}, "
+            f"{document.get('description', '') or ''}, parameters: "
+            + json.dumps(document.get("parameters", {}) or {}, ensure_ascii=False)
+        )
+    if catalog == "apibank":
+        return (
+            f"{document['name']}\nDescription: {document.get('description', '')}\nParameters: "
+            + json.dumps(document["parameters"])
+        )
+    raise ValueError(f"Unknown catalog: {catalog}")
 
 
 def positive_int(value):
@@ -46,12 +59,12 @@ def main():
     parser.add_argument("--embeddings", type=Path, help="Optionally save normalized float32 vectors as .npy.")
     parser.add_argument("--model", default="BAAI/bge-large-en-v1.5")
     parser.add_argument("--device", default="cpu", help="cpu or cuda:N (relative to CUDA_VISIBLE_DEVICES)")
-    parser.add_argument("--batch-size", type=positive_int, help="Default: 64.")
+    parser.add_argument("--batch-size", type=positive_int, help="Default: 64 for ToolEnv/API-Bank, 256 for ToolBench.")
     parser.add_argument("--max-length", type=positive_int, default=512)
     parser.add_argument("--threads", type=positive_int, default=8)
     parser.add_argument("--overwrite", action="store_true", help="Replace existing index/metadata/embedding outputs.")
     args = parser.parse_args()
-    args.batch_size = args.batch_size or 64
+    args.batch_size = args.batch_size or (256 if args.catalog == "toolbench" else 64)
     if args.corpus and not args.output_index:
         parser.error("--corpus requires --output-index to keep the default serving pair intact")
     if args.device != "cpu" and not (args.device.startswith("cuda:") and args.device[5:].isdigit()):

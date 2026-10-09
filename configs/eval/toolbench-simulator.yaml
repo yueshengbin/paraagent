@@ -1,0 +1,7 @@
+api_base: http://127.0.0.1:12345/v1
+api_key: EMPTY
+model: toolenv-sft
+temperature: 0.0
+max_tokens: 512
+cache_folder: ../../data/benchmarks/toolbench/cache
+is_save: false
