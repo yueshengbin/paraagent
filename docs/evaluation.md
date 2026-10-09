@@ -2,6 +2,16 @@
 
 Run from the repository root in the `paraagent` environment after [installation](installation.md) and [benchmark data setup](data.md). Full runs also need the [trained/exported checkpoints](training.md); the public data bundle and model weights are not yet complete. Installation creates `paraact` and `paraagent-eval`; without it, use `PYTHONPATH=src python -m paraagent.evaluation.run` and `PYTHONPATH=src python -m paraagent.evaluation.score`. ToolBench has 765 tasks; API-Bank has 50.
 
+## Benchmark data
+
+Download [paraagent-benchmarks.zip](https://drive.google.com/file/d/1meaOTdnT_R-ZESisIQpU60lJq554oFJq/view?usp=drive_link) from Google Drive, then extract it from the repository root:
+
+```bash
+unzip paraagent-benchmarks.zip -d data/
+```
+
+This provides the ToolBench and API-Bank evaluation resources under `data/benchmarks/toolbench/` and `data/benchmarks/apibank/`.
+
 ## Start services
 
 For default ParaAgent + ToolBench evaluation, start these in separate terminals:
