@@ -83,13 +83,11 @@ def evaluate_level3_sample(query, answer_generation):
     for gt_call in gt_api_calls:
         gt_name = gt_call['api_name']
         gt_input = gt_call['param_dict']
-        gt_result = gt_call['result']
         candidate_indices = [idx for idx, pred_call in enumerate(pred_api_calls) if idx not in used_pred_indices and pred_call['api_name'] == gt_name]
         matched = False
         if candidate_indices:
             for idx in candidate_indices:
                 pred_args = pred_api_calls[idx]['param_dict']
-                pred_result = pred_api_calls[idx]['result']
                 if _params_match(pred_args, gt_input):
                     item_correct_api_calls += 1
                     used_pred_indices.add(idx)

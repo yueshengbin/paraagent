@@ -7,6 +7,8 @@ import time
 from types import SimpleNamespace
 
 from paraagent.evaluation.api_config import load_api_config, public_api_config
+from paraagent.evaluation.experiment import fingerprint, prediction_identity
+from paraagent.security import validate_public_url
 
 
 def benchmark_tasks(root, benchmark):
@@ -75,6 +77,20 @@ def run_episode(model, environment, max_depth=60, protocol="paraagent"):
     return result
 
 
+def _validate_existing_prediction(target, experiment, query):
+    previous = json.loads(target.read_text())
+    if previous.get("inference_api") != experiment["inference_api"] or previous.get("agent") != experiment["agent"]:
+        raise ValueError(f"Inference API or agent differs from existing prediction: {target}")
+    if experiment["benchmark"] == "toolbench":
+        if any(previous.get(field) != experiment[field] for field in (
+            "toolbench_backend", "toolbench_service_url", "toolbench_cache_policy",
+        )):
+            raise ValueError(f"ToolBench backend differs from existing prediction: {target}")
+    previous_identity = prediction_identity(previous, experiment["benchmark"], query)
+    if previous_identity != experiment:
+        raise ValueError(f"Experiment settings differ from existing prediction; use a new output directory: {target}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run ParaAgent or GPT-ReAct on ToolBench or API-Bank.")
     parser.add_argument("--benchmark", choices=["toolbench", "apibank"], required=True)
@@ -95,6 +111,8 @@ def main():
     args = parser.parse_args()
     if args.top_k < 1:
         parser.error("--top-k must be positive")
+    if args.max_depth < 1:
+        parser.error("--max-depth must be positive")
     if args.runs < 1 or (args.limit is not None and args.limit < 1):
         parser.error("runs and limit must be positive")
     if args.agent == "react" and args.paradigm is None:
@@ -109,6 +127,9 @@ def main():
         parser.error("--inference-config is required with --agent react")
     try:
         inference_config = load_api_config(args.inference_config) if args.inference_config else None
+        validate_public_url(args.retriever_url, "--retriever-url")
+        if args.base_url:
+            validate_public_url(args.base_url, "--base-url")
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         parser.error(str(exc))
     service_url = os.environ.get("TOOLBENCH_SERVICE_URL") if args.toolbench_backend in {"live", "virtual", "mirrorapi"} else None
@@ -116,10 +137,11 @@ def main():
     cache_policy = {"live": "service-managed", "virtual": "service-managed-virtual",
                     "mirrorapi": "service-managed-mirrorapi",
                     "simulator": "simulator-cache-then-model"}[args.toolbench_backend]
+    service_timeout = None
     if args.toolbench_backend in {"live", "virtual", "mirrorapi"}:
         from paraagent.evaluation.toolbench.service import ToolBenchServiceClient
         try:
-            ToolBenchServiceClient(service_url, toolbench_key, backend=args.toolbench_backend)
+            service_timeout = ToolBenchServiceClient(service_url, toolbench_key, backend=args.toolbench_backend).timeout
         except ValueError as exc:
             parser.error(str(exc))
 
@@ -129,6 +151,7 @@ def main():
     os.environ.setdefault("AGENT_MAX_TOKENS", "2048")
     os.environ.setdefault("MIRRORAPI_CONFIG", str(root / "configs/eval/toolbench-simulator.yaml"))
     tasks = benchmark_tasks(root, args.benchmark)
+    tasks_fingerprint = fingerprint(tasks)
     if args.limit:
         tasks = tasks[:args.limit]
     if args.agent == "paraagent":
@@ -150,18 +173,37 @@ def main():
         inference_identity = public_api_config(inference_config)
         protocol = "react"
         environment_paradigm = args.paradigm
+    experiment = {
+        "schema_version": 1, "benchmark": args.benchmark, "agent": args.agent,
+        "paradigm": environment_paradigm, "inference_api": inference_identity,
+        "retriever_url": args.retriever_url, "retrieval_top_k": args.top_k,
+        "max_depth": args.max_depth, "agent_max_tokens": int(os.environ["AGENT_MAX_TOKENS"]),
+        "benchmark_tasks_fingerprint": tasks_fingerprint,
+    }
+    if args.benchmark == "toolbench":
+        experiment.update(toolbench_backend=args.toolbench_backend, toolbench_service_url=service_url,
+                          toolbench_cache_policy=cache_policy,
+                          toolbench_timeout=list(service_timeout) if service_timeout else None)
+        if args.toolbench_backend == "simulator":
+            config_path = Path(os.environ["MIRRORAPI_CONFIG"])
+            experiment["simulator_config_fingerprint"] = (
+                fingerprint(config_path.read_text()) if config_path.is_file() else None
+            )
+            simulator_url = os.environ.get("TOOLENV_BASE_URL")
+            if simulator_url is not None:
+                validate_public_url(simulator_url, "TOOLENV_BASE_URL")
+            experiment["simulator_base_url_override"] = simulator_url
+    # Check every existing prediction before executing any missing episodes.
     for run in range(1, args.runs + 1):
         for split, qid, query in tasks:
             target = args.output / f"run-{run}" / split / f"{qid}_Agent@1.json"
             if target.exists():
-                previous = json.loads(target.read_text())
-                if previous.get("inference_api") != inference_identity or previous.get("agent") != args.agent:
-                    raise ValueError(f"Inference API or agent differs from existing prediction: {target}")
-                if args.benchmark == "toolbench":
-                    if (previous.get("toolbench_backend") != args.toolbench_backend
-                            or previous.get("toolbench_service_url") != service_url
-                            or previous.get("toolbench_cache_policy") != cache_policy):
-                        raise ValueError(f"ToolBench backend differs from existing prediction: {target}")
+                _validate_existing_prediction(target, experiment, query)
+    for run in range(1, args.runs + 1):
+        for split, qid, query in tasks:
+            target = args.output / f"run-{run}" / split / f"{qid}_Agent@1.json"
+            if target.exists():
+                _validate_existing_prediction(target, experiment, query)
                 continue
             if args.agent == "paraagent":
                 model = model_class(model=model_name, base_url=base_url, openai_key=api_key)
@@ -183,6 +225,9 @@ def main():
             result["agent"] = args.agent
             result["inference_api"] = inference_identity
             result["retrieval_top_k"] = args.top_k
+            result["experiment"] = experiment
+            result["experiment_fingerprint"] = fingerprint(experiment)
+            result["query_fingerprint"] = fingerprint(query)
             if args.benchmark == "toolbench":
                 result["toolbench_backend"] = args.toolbench_backend
                 result["toolbench_cache_policy"] = cache_policy

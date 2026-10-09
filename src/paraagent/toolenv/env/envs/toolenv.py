@@ -15,7 +15,6 @@ from paraagent.paraact.protocol import (
     action_controller_progress,
     action_plan_dependencies_valid,
     action_plan_dependency_edges,
-    action_plan_execution_signature,
     action_plan_format_valid,
     action_plan_frontier,
     action_plan_occurrence_tools,
@@ -63,13 +62,14 @@ _FIRST_SENTENCE_RE = re.compile(r"[.!?。！？]")
 
 @AgentEnv.register("toolenv")
 class ToolEnv(AgentEnv):
-    """Environment for the ToolBench workflow on top of the AgentEnv API.
+    """Run tool retrieval and execution through the AgentEnv API.
 
     The loop is:
     1. model emits one or more ``<search_tool>...</search_tool>``
     2. env returns ``<tools>...</tools>``
     3. model emits one or more ``<tool_call>{...}</tool_call>``
-    4. env runs the MirrorAPI simulator and returns ``<tool_response>...</tool_response>``
+    4. env executes Simia tools natively or uses the ToolEnv cache/simulator,
+       then returns ``<tool_response>...</tool_response>``
     """
 
     use_trajectory_reward = True

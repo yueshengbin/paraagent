@@ -795,7 +795,6 @@ class TauNativeExecutor:
         With transactions enabled, commit in-memory writes only on success.
         Copy arguments as well as state because native tools may mutate nested values.
         """
-        mode = "all_atomic_v1"
         if not isinstance(tool_name, str) or not tool_name.strip():
             return _err_payload("InvalidRequestError", "Invalid tool name: expected a non-empty string.", "")
         domain = domain_for_sample_id(sample_id)

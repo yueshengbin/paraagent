@@ -3,15 +3,21 @@ import argparse
 import json
 from pathlib import Path
 import statistics
+import warnings
 
 from paraagent.evaluation.run import benchmark_tasks
 from paraagent.evaluation.api_config import load_api_config, public_api_config
+from paraagent.evaluation.experiment import fingerprint, prediction_identity
 
 
-def score_runs(root, benchmark, predictions, runs, scoring_config=None):
+def score_runs(root, benchmark, predictions, runs, scoring_config=None, *, allow_legacy_results=False):
     tasks = benchmark_tasks(root, benchmark)
+    if not tasks or not runs or len(set(runs)) != len(runs):
+        raise ValueError("Scoring requires tasks and a nonempty list of distinct runs")
     if benchmark == "toolbench" and scoring_config is None:
         raise ValueError("ToolBench scoring requires --scoring-config")
+    if scoring_config is not None:
+        public_api_config(scoring_config)
     toolbench_sources = set()
     if benchmark == "toolbench":
         for run in runs:
@@ -25,6 +31,23 @@ def score_runs(root, benchmark, predictions, runs, scoring_config=None):
                                        prediction.get("toolbench_cache_policy", "unknown_legacy")))
         if len(toolbench_sources) != 1:
             raise ValueError("ToolBench predictions mix observation backends or service endpoints")
+    identities = {}
+    task_set_fingerprint = fingerprint(tasks)
+    for run in runs:
+        for split, qid, query in tasks:
+            path = Path(predictions) / run / split / f"{qid}_Agent@1.json"
+            if not path.is_file():
+                raise FileNotFoundError(f"Incomplete run; missing {path}")
+            prediction = json.loads(path.read_text())
+            identity = prediction_identity(prediction, benchmark, query, allow_legacy_results=allow_legacy_results)
+            if not identity.get("legacy") and identity["benchmark_tasks_fingerprint"] != task_set_fingerprint:
+                raise ValueError("Prediction benchmark task set differs from the scoring task set")
+            identities[fingerprint(identity)] = identity
+    if len(identities) != 1:
+        raise ValueError("Predictions mix experiment settings; score each experiment separately")
+    identity = next(iter(identities.values()))
+    if identity.get("legacy"):
+        warnings.warn("Legacy results have incomplete experiment metadata; only recorded fields were checked", UserWarning)
     if benchmark == "toolbench":
         from paraagent.evaluation.toolbench.judge import load_evaluator
         from paraagent.evaluation.toolbench.metrics import compute_tool_hit_metrics, extract_called_tools, load_toolbench_name_api_set
@@ -76,6 +99,10 @@ def score_runs(root, benchmark, predictions, runs, scoring_config=None):
     summary = {"benchmark": benchmark, "tasks": len(keys), "runs": runs,
         "success_per_run": per_run, "pass_at_k": statistics.mean(any(r[k]["success"] for r in all_scores) for k in keys),
         "k": len(runs)}
+    summary["identity_validation"] = "legacy-partial" if identity.get("legacy") else "experiment-metadata"
+    if not identity.get("legacy"):
+        summary["experiment"] = identity
+        summary["experiment_fingerprint"] = fingerprint(identity)
     if benchmark == "toolbench":
         summary["judge_pass_rate_per_run"] = [statistics.mean(r[k]["judge_credit"] for k in keys) for r in all_scores]
         split_keys = {}
@@ -103,6 +130,8 @@ def main():
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--runs", nargs="+", default=["run-1"])
     parser.add_argument("--scoring-config", type=Path, help="ToolBench judge JSON with model, base_url and api_key_env.")
+    parser.add_argument("--allow-legacy-results", action="store_true",
+                        help="Score older predictions with partial identity checks; missing settings cannot be verified.")
     args = parser.parse_args()
     if len(set(args.runs)) != len(args.runs):
         parser.error("Each run must be distinct")
@@ -114,7 +143,8 @@ def main():
         scoring_config = load_api_config(args.scoring_config) if args.scoring_config else None
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         parser.error(str(exc))
-    result = score_runs(args.root, args.benchmark, args.predictions, args.runs, scoring_config)
+    result = score_runs(args.root, args.benchmark, args.predictions, args.runs, scoring_config,
+                        allow_legacy_results=args.allow_legacy_results)
     (args.predictions / "summary.json").write_text(json.dumps(result, indent=2))
     print(json.dumps(result, indent=2))
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config import *  
+from .config import AgentFlowConfig as AgentFlowConfig
 from . import config
 
 __all__ = config.__all__

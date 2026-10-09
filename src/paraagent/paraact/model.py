@@ -109,8 +109,6 @@ class AgentVLLMFunction:
         self.model_name = model
         self.template = template
         self.max_sequence_length = max_sequence_length
-        import os as _os
-
         self.client = OpenAI(api_key=openai_key, base_url=base_url)
         self.conversation_history = []
 
@@ -128,6 +126,7 @@ class AgentVLLMFunction:
         prompt_text = self._render_prompt(prompt)
         max_retries = 13
         request_max_tokens = int(os.environ.get("AGENT_MAX_TOKENS", "2048"))
+        last_error_type = None
         for attempt in range(max_retries):
             try:
                 response = self.client.completions.create(
@@ -143,14 +142,15 @@ class AgentVLLMFunction:
                     completion_tokens = None
                 return prediction, completion_tokens
             except (ConnectionError, Timeout) as e:
-                print(f"Network error: {e}. Retrying {attempt + 1}/{max_retries}...")
+                print(f"Network error ({type(e).__name__}). Retrying {attempt + 1}/{max_retries}...")
                 time.sleep(60)
                 if attempt == max_retries - 1:
                     raise
             except RequestException as e:
-                print(f"Request error: {e}")
+                print(f"Request error ({type(e).__name__})")
                 raise
             except Exception as e:
+                last_error_type = type(e).__name__
                 message = str(e)
                 context_match = re.search(
                     "maximum context length is (\\d+) tokens.*?prompt contains at least (\\d+) input tokens",
@@ -167,9 +167,12 @@ class AgentVLLMFunction:
                             f"Context limit reached; retrying with max_tokens={request_max_tokens} (context={context_limit}, input={input_tokens})."
                         )
                         continue
-                time.sleep(30)
-                print(e)
-        return "Unable to get a response after several attempts.", None
+                if attempt < max_retries - 1:
+                    time.sleep(30)
+                print(f"Policy request failed ({last_error_type}); attempt {attempt + 1}/{max_retries}")
+        raise RuntimeError(
+            f"Policy request failed after {max_retries} attempts ({last_error_type}); no model answer was produced"
+        ) from None
 
     def add_message(self, message):
         self.conversation_history.append(message)

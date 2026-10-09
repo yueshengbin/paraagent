@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Union, Dict, List, Optional, Any
 import random
 import uuid
-import re
 GID = str
 
 def assign_gid() -> GID:

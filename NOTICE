@@ -1,0 +1,28 @@
+ParaAgent incorporates and adapts third-party software.
+
+The agent and reinforcement-learning integration builds on Agent-R1
+(https://github.com/0russwest0/Agent-R1), distributed under the MIT License.
+The source checkout used for this integration carries:
+Copyright (c) 2025 russwest404.
+
+Training modules also derive from verl
+(https://github.com/verl-project/verl), distributed under Apache-2.0.
+Copyright notices for Bytedance Ltd., the HuggingFace Team, the SGLang Team
+and ModelBest Inc. are retained in the corresponding source files.
+These modules are adapted for ParaAgent's rollout, reward and trainer integration.
+
+The bundled tau-bench native tool code derives from Sierra's tau-bench
+(https://github.com/sierra-research/tau-bench), distributed under the MIT License.
+Copyright Sierra.
+
+The ToolBench evaluation judge and prompt derive from StableToolBench
+(https://github.com/THUNLP-MT/StableToolBench), distributed under Apache-2.0.
+The judge is adapted to explicit inference and scoring API configuration.
+
+License texts for these components are included in third_party/licenses/.
+The separately installed LLaMA-Factory runtime snapshot retains its own
+license and provenance in sft/LLaMA-Factory/LICENSE and sft/UPSTREAM.json.
+
+These notices describe third-party terms. They do not select a license for
+ParaAgent's original code or grant rights to separately distributed models
+or datasets; those require their own applicable terms.

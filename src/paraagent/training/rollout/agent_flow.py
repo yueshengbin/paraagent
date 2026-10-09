@@ -1014,7 +1014,6 @@ class AgentFlowWorkerBase:
             response_mask_tensor = torch.tensor([response_mask_pad], dtype=torch.long)
             attention_tensor = torch.tensor([prompt_attention + response_attention], dtype=torch.long)
             input_tensor = torch.cat([prompt_tensor, response_tensor], dim=1)
-            multi_modal_input = {}
             position_tensor = compute_position_id_with_mask(attention_tensor)
 
             prompt_ids.append(prompt_tensor)

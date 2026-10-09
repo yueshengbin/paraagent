@@ -27,7 +27,7 @@ source .env
 set +a
 ```
 
-Predictions and scoring summaries record model, base URL and key variable name, never the key.
+Predictions and scoring summaries record model, base URL and key variable name, never the key. API and retrieval URLs must use HTTP(S), without embedded credentials, query parameters or fragments.
 
 ## ToolBench observation backend
 
@@ -51,6 +51,8 @@ paraact --benchmark toolbench --toolbench-backend mirrorapi \
 ```
 
 `virtual` and `mirrorapi` share `/virtual` but are recorded separately. For real calls, use `/rapidapi` with `--toolbench-backend live` and `TOOLBENCH_KEY`. External backends do not fall back to local simulation; scoring rejects mixed sources. Validate tool identity before reporting scores.
+
+Connection/read timeouts default to 15/15 seconds for `live` and 15/300 seconds for `virtual` and `mirrorapi`. Override them with `TOOLBENCH_CONNECT_TIMEOUT` and `TOOLBENCH_READ_TIMEOUT` (positive seconds).
 
 ## ParaAgent
 
@@ -79,5 +81,5 @@ For the EaE baseline, change `--paradigm` to `EaE` and use a new output director
 
 - ToolBench: GPT completeness judgment of a final `Finish` answer and tool-hit metrics. `success_per_run` is binary; `judge_pass_rate_per_run` and its per-split breakdown give `Unsure` half credit as in the original pass-rate script.
 - API-Bank: one-to-one API-name/input matching; all required calls must match. Outputs and extra calls are ignored.
-- Predictions: `run-N/<split>/<query_id>_Agent@1.json`. Changing the agent or inference API requires a new output directory. Scoring requires complete runs; `--limit` is for smoke tests.
+- Predictions: `run-N/<split>/<query_id>_Agent@1.json`. Use a new output directory when changing experiment settings or benchmark tasks. Resume and scoring reject mismatched results. Scoring requires complete runs; `--limit` is for smoke tests.
 - Multiple runs: generate with `--runs 3` and score with `--runs run-1 run-2 run-3`. `pass_at_k` is the fraction solved in any run.

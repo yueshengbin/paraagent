@@ -2303,7 +2303,6 @@ def _parse_step_structure(response_text: str) -> dict[str, Any]:
     outer_text_valid = _has_only_whitespace_outside_spans(response_text, tag_spans)
     action_positions = search_spans + tool_spans + answer_spans
     first_action_start = min((start for start, _ in action_positions), default=None)
-    last_think_end = max((end for _, end in think_spans), default=None)
 
     has_think = bool(think_spans)
     think_before_actions = bool(has_think and first_action_start is not None)
@@ -3335,7 +3334,6 @@ def _has_tool_call_attempt(trajectory_steps: list[dict[str, Any]]) -> bool:
         if TOOL_CALL_RE.search(response_text):
             return True
         parsed_step = _parse_step_structure(response_text)
-        env_info = step.get("env_info", {}) or {}
         action_type = _action_type_from_step(step, parsed_step)
         if action_type == "tool_call":
             return True
@@ -3345,7 +3343,6 @@ def _has_tool_call_attempt(trajectory_steps: list[dict[str, Any]]) -> bool:
 def _has_search_step(trajectory_steps: list[dict[str, Any]]) -> bool:
     for step in trajectory_steps:
         parsed_step = _parse_step_structure(step.get("response_text", ""))
-        env_info = step.get("env_info", {}) or {}
         action_type = _action_type_from_step(step, parsed_step)
         if action_type == "search_tool":
             return True
@@ -4776,7 +4773,6 @@ def _compute_tool_hit_ratios(trajectory_steps: list, target_tool_names) -> dict[
     retrieved: set[str] = set()
     called: set[str] = set()
     for step in trajectory_steps or []:
-        env_info = step.get("env_info", {}) or {}
         response_text = step.get("response_text", "")
         parsed_step = _parse_step_structure(response_text)
         action_type = _action_type_from_step(step, parsed_step)
@@ -5391,7 +5387,7 @@ def _compute_outcome_reward(
             )
 
         normalized_tau_task_type = str(tau_task_type).strip().lower()
-        delivery_version = _tau_delivery_contract_version(tau_output_contract_version)
+        _tau_delivery_contract_version(tau_output_contract_version)
         inquiry_min_evidence_checked = normalized_tau_task_type == "inquiry"
         inquiry_exact_read_required_total = int(
             tau_required_call_info.get(
@@ -5445,7 +5441,7 @@ def _compute_outcome_reward(
                 ans_text,
                 gt_write_calls,
             )
-        delivery_version = _tau_delivery_contract_version(tau_output_contract_version)
+        _tau_delivery_contract_version(tau_output_contract_version)
         from paraagent.rewards.simia_delivery import answer_consistency
 
         delivery_consistency = answer_consistency(ans_text, gt_write_calls)
@@ -9848,7 +9844,7 @@ def score_tau_outputs_detailed(
     tolerate_delivery_errors: bool = False,
 ) -> dict[str, Any]:
     """Score outputs and expose every atom's matcher and evidence-read result."""
-    delivery_version = _tau_delivery_contract_version(contract_version)
+    _tau_delivery_contract_version(contract_version)
     if not isinstance(gt_outputs, list) or not gt_outputs:
         return {
             "ratio": 0.0,

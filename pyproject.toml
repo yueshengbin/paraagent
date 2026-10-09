@@ -20,6 +20,9 @@ paraact = "paraagent.evaluation.run:main"
 paraagent-eval = "paraagent.evaluation.score:main"
 toolenv-retriever = "paraagent.toolenv.retriever:main"
 
+[tool.setuptools]
+license-files = ["NOTICE", "third_party/licenses/*"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

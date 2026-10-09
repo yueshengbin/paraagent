@@ -28,6 +28,12 @@ def process_valid_data(method, answer_generation):
                 index = index + 1
             elif 'tool_calls' in message and message['tool_calls'] is not None and (len(message['tool_calls']) != 0):
                 calls = message['tool_calls']
+                responses = []
+                for message2 in conversation[index + 1:]:
+                    if message2['role'] != 'tool':
+                        break
+                    responses.append(message2)
+                used_responses = set()
                 for tc in calls:
                     function, name = (tc['function'], tc['function']['name'])
                     name, arguments = (function['name'], function['arguments'])
@@ -37,12 +43,17 @@ def process_valid_data(method, answer_generation):
                         break
                     else:
                         matched_response = None
-                        for message2 in conversation[index + 1:]:
-                            if message2['role'] != 'tool':
-                                continue
-                            if message2.get('name') == name or (tc_id and message2.get('tool_call_id') == tc_id):
-                                matched_response = message2['content']
-                                break
+                        # IDs are authoritative; name fallback supports older traces without IDs.
+                        candidates = [i for i, response in enumerate(responses)
+                                      if i not in used_responses and tc_id and response.get('tool_call_id') == tc_id]
+                        if not candidates:
+                            candidates = [i for i, response in enumerate(responses)
+                                          if i not in used_responses and response.get('name') == name
+                                          and (not tc_id or not response.get('tool_call_id'))]
+                        if candidates:
+                            response_index = candidates[0]
+                            matched_response = responses[response_index]['content']
+                            used_responses.add(response_index)
                         response = matched_response if matched_response is not None else ''
                         node = ExecutionNode(role='tool', message={'name': name, 'arguments': arguments, 'response': response})
                         eg.add_node(node)

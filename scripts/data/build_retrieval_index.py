@@ -14,7 +14,7 @@ import tempfile
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from paraagent.toolenv.runtime.retrieval_text import document_to_ir_text
-from paraagent.toolenv.retrieval_resources import file_sha256, load_corpus_snapshot, load_documents
+from paraagent.toolenv.retrieval_resources import file_sha256, load_corpus_snapshot
 
 
 CATALOGS = {

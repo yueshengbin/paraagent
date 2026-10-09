@@ -47,6 +47,7 @@ def run_ppo_agent(config) -> None:
     """Initialize Ray and dispatch distributed PPO training."""
 
     from paraagent.training.data_profile import validate_training_inputs, validate_worker_mode
+    from paraagent.security import redact_config
 
     validate_worker_mode(config)
     tau_worker_env = validate_training_inputs(
@@ -71,7 +72,7 @@ def run_ppo_agent(config) -> None:
     if not ray.is_initialized():
         runtime_env = OmegaConf.merge(get_ppo_ray_runtime_env(), runtime_env_kwargs)
         ray_init_kwargs = OmegaConf.create({**ray_init_kwargs, "runtime_env": runtime_env})
-        print(f"ray init kwargs: {ray_init_kwargs}")
+        print(f"ray init kwargs: {redact_config(OmegaConf.to_container(ray_init_kwargs, resolve=True))}")
         ray.init(**OmegaConf.to_container(ray_init_kwargs))
 
     if (
@@ -188,13 +189,14 @@ class TaskRunner:
         """Create workers, datasets, and reward functions, then start PPO training."""
 
         from pprint import pprint
+        from paraagent.security import redact_config
 
         from omegaconf import OmegaConf
 
         from verl.utils.fs import copy_to_local
 
         print(f"TaskRunner hostname: {socket.gethostname()}, PID: {os.getpid()}")
-        pprint(OmegaConf.to_container(config, resolve=True))
+        pprint(redact_config(OmegaConf.to_container(config, resolve=True)))
         OmegaConf.resolve(config)
 
         actor_rollout_cls, ray_worker_group_cls = self.add_actor_rollout_worker(config)

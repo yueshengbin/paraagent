@@ -711,7 +711,6 @@ def match_action_calls_to_occurrences(
     calls: Any,
 ) -> list[str | None]:
 
-    occurrence_tools = dict(progress.occurrence_tools)
     available_by_tool: dict[str, list[str]] = {}
     for ref, tool in progress.occurrence_tools:
         if ref in progress.ready_occurrences:

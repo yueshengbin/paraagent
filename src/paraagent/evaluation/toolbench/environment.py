@@ -116,7 +116,7 @@ class ToolBenchEnvironment(BaseEnvironment):
         else:
             raise ValueError("paradigm must be 'ETE' or 'EaE'.")
         self.CALL_MAX_TIME = 3
-        self.task_description = f"""You should use functions to help handle the real time user querys. Remember:\n1.ALWAYS call "Finish" function at the end of the task. And the final answer should contain enough information to show to the user,If you can't handle the task, or you find that function calls always fail(the function is not valid now), use function Finish->give_up_and_restart.\n2.Do not use origin tool names, use only subfunctions' names.\nYou have access of the following tools:\n"""
+        self.task_description = """You should use functions to help handle the real time user querys. Remember:\n1.ALWAYS call "Finish" function at the end of the task. And the final answer should contain enough information to show to the user,If you can't handle the task, or you find that function calls always fail(the function is not valid now), use function Finish->give_up_and_restart.\n2.Do not use origin tool names, use only subfunctions' names.\nYou have access of the following tools:\n"""
         unduplicated_reflection = {}
         for standardize_tool_name, tool_des in tool_descriptions:
             unduplicated_reflection[standardize_tool_name] = tool_des
@@ -315,7 +315,7 @@ class ToolBenchEnvironment(BaseEnvironment):
                     else:
                         response = get_simulator().fake_response_batch([payload])[0]['content']
                 except requests.exceptions.Timeout:
-                    return (json.dumps({'name': function['name'], 'result': {'error': {'type': 'NetworkError', 'msg': f'Timeout error...'}}}, ensure_ascii=False), 5)
+                    return (json.dumps({'name': function['name'], 'result': {'error': {'type': 'NetworkError', 'msg': 'Timeout error...'}}}, ensure_ascii=False), 5)
                 except (ToolBenchServiceError, KeyError, IndexError, TypeError) as exc:
                     return make_return({'error': {'type': 'ToolExecutionError', 'msg': str(exc)}}, 12)
                 if not isinstance(response, dict):

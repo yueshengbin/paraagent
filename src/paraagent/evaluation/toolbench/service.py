@@ -1,6 +1,8 @@
 """ToolBench client for explicitly selected service endpoints."""
 
 from urllib.parse import urlsplit
+import math
+import os
 
 import requests
 
@@ -12,7 +14,8 @@ class ToolBenchServiceError(RuntimeError):
 
 
 class ToolBenchServiceClient:
-    def __init__(self, service_url: str, toolbench_key: str | None, backend: str = "live"):
+    def __init__(self, service_url: str, toolbench_key: str | None, backend: str = "live", *,
+                 connect_timeout: float | None = None, read_timeout: float | None = None):
         if backend not in {"live", "virtual", "mirrorapi"}:
             raise ValueError(f"Unknown ToolBench service backend: {backend}")
         parsed = urlsplit(service_url or "")
@@ -32,6 +35,21 @@ class ToolBenchServiceClient:
         self.service_url = service_url
         self.backend = backend
         self._toolbench_key = toolbench_key or ""
+        self.timeout = (
+            self._timeout(connect_timeout, "TOOLBENCH_CONNECT_TIMEOUT", 15),
+            self._timeout(read_timeout, "TOOLBENCH_READ_TIMEOUT", 15 if backend == "live" else 300),
+        )
+
+    @staticmethod
+    def _timeout(value, variable, default):
+        value = os.environ.get(variable, default) if value is None else value
+        try:
+            seconds = float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{variable} must be a finite positive number of seconds") from None
+        if isinstance(value, bool) or not math.isfinite(seconds) or seconds <= 0:
+            raise ValueError(f"{variable} must be a finite positive number of seconds")
+        return seconds
 
     def call(self, function: dict, tool_input: dict, strip: str) -> dict:
         name = function["name"]
@@ -52,7 +70,7 @@ class ToolBenchServiceClient:
                 json=payload,
                 headers={"toolbench_key": self._toolbench_key},
                 proxies={"http": "", "https": ""},
-                timeout=None if self.backend in {"virtual", "mirrorapi"} else 15,
+                timeout=self.timeout,
             )
         except requests.exceptions.Timeout:
             raise

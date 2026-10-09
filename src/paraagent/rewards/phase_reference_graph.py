@@ -6,7 +6,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping
 
-from paraagent.paraact.protocol import action_plan_occurrence_tools, action_plan_stage_specs
+from paraagent.paraact.protocol import action_plan_occurrence_tools
 
 def _name(value: Any) -> str:
     if not isinstance(value, str):

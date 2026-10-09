@@ -7,6 +7,15 @@ Run from the repository root on Linux x86_64 with Python 3.12 and a CUDA 12.8-co
 | `paraagent` | LLaMA-Factory SFT, serving, retrieval and evaluation | 2.10.0 | 0.19.0 |
 | `paraagent-rl` | verl training and policy rollouts | 2.8.0 | 0.11.0 |
 
+Clone the source repository before following either environment setup:
+
+```bash
+git clone https://github.com/yueshengbin/paraagent.git
+cd paraagent
+```
+
+The launchers also read repository configurations and separately downloaded data. Keep this checkout available when using the installed Python package.
+
 ## SFT and serving
 
 ```bash
