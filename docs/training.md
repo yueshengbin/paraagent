@@ -26,18 +26,6 @@ bash scripts/train/paraagent-rl.sh
 
 `configs/train/paraagent-rl.yaml` defaults to eight H200 GPUs, batch 256, two epochs, eight rollouts per prompt and 15 turns: 128 outer updates. Validation is disabled. Adjust batch divisibility and memory settings when changing GPU count.
 
-### Reward
-
-The reward entry point is `paraagent.rewards.tool_reward.compute_score`.
-
-- Outcome: one Q/F/U judge with a consistency recheck for `110`. Simia uses Q/F with native state, required calls and answer evidence; utility remains diagnostic.
-- Process: tool/search coverage and phase scores for grounding, dependencies, layers and execution. The phase score is multiplied by `clip(R_outcome / 1.5, 0, 1)`.
-- Penalties: protocol violations, repetition and dependency-order violations, scaled together by `0.25`.
-
-`R_traj = R_outcome + R_step - penalty`; `R_format_score = 1 + R_format`. GDPO normalizes `R_traj`, the gated `R_phase` and `R_format_score` separately, then combines them with weights `1.0`, `0.5` and `0.25`. Format scores and penalties are unconditional. The scalar diagnostic score is `clip(R_format + R_outcome + R_step + R_phase - penalty, -1, 3)`.
-
-Reward hyperparameters use `REWARD_*` names in `configs/toolenv/runtime.yaml`; GDPO weights are in `configs/train/paraagent-rl.yaml`.
-
 ### Launch overrides
 
 Use Hydra overrides:
