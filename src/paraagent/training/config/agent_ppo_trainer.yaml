@@ -1,0 +1,11 @@
+defaults:
+  - ppo_trainer
+  - /overrides/rollout@actor_rollout_ref.rollout
+  - _self_
+
+data:
+  # Avoid extra dataloader processes alongside rollout and reward workers.
+  dataloader_num_workers: 0
+
+trainer:
+  use_legacy_worker_impl: disable

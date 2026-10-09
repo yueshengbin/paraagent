@@ -1,0 +1,79 @@
+diff --git a/csrc/cumem_allocator.cpp b/csrc/cumem_allocator.cpp
+--- a/csrc/cumem_allocator.cpp
++++ b/csrc/cumem_allocator.cpp
+@@ -94,6 +94,7 @@
+   if (error_code != 0) {
+     return;
+   }
++  *p_memHandle = 0;
+ }
+ 
+ PyObject* create_tuple_from_c_integers(unsigned long long a,
+@@ -228,10 +229,15 @@
+   CUdeviceptr d_mem = (CUdeviceptr)recv_d_mem;
+   CUmemGenericAllocationHandle* p_memHandle =
+       (CUmemGenericAllocationHandle*)recv_p_memHandle;
+-  unmap_and_release(device, size, d_mem, p_memHandle);
++  if (*p_memHandle != 0) {
++    unmap_and_release(recv_device, recv_size, d_mem, p_memHandle);
++    if (error_code != 0) {
++      return;
++    }
++  }
+ 
+   // free address and the handle
+-  CUDA_CHECK(cuMemAddressFree(d_mem, size));
++  CUDA_CHECK(cuMemAddressFree(d_mem, recv_size));
+   if (error_code != 0) {
+     return;
+   }
+diff --git a/vllm/device_allocator/cumem.py b/vllm/device_allocator/cumem.py
+--- a/vllm/device_allocator/cumem.py
++++ b/vllm/device_allocator/cumem.py
+@@ -8,6 +8,7 @@
+ # both of them failed because of cuda context mismatch.
+ # not sure why, they are created from a different context.
+ # the only successful approach is to call cuda driver API in C.
++import atexit
+ import dataclasses
+ import gc
+ import os
+@@ -143,7 +144,19 @@
+         assert cumem_available, "cumem allocator is not available"
+         if CuMemAllocator.instance is None:
+             CuMemAllocator.instance = CuMemAllocator()
++            atexit.register(CuMemAllocator.instance.release_pools)
+         return CuMemAllocator.instance
++
++    def release_pools(self) -> None:
++        """Release memory pools before their backing allocators are destroyed."""
++        entries = list(self.allocator_and_pools.values())
++        self.allocator_and_pools.clear()
++        pools = [entry[0] for entry in entries]
++        allocators = [entry[1] for entry in entries]
++        entries.clear()
++        pools.clear()
++        gc.collect()
++        allocators.clear()
+ 
+     def __init__(self):
+         conf = os.environ.get("PYTORCH_CUDA_ALLOC_CONF", "")
+diff --git a/vllm/v1/worker/gpu_worker.py b/vllm/v1/worker/gpu_worker.py
+--- a/vllm/v1/worker/gpu_worker.py
++++ b/vllm/v1/worker/gpu_worker.py
+@@ -686,6 +686,15 @@
+     def shutdown(self) -> None:
+         if runner := getattr(self, "model_runner", None):
+             runner.ensure_kv_transfer_shutdown()
++            self.model_runner = None
++            del runner
++            gc.collect()
++        if self.vllm_config.model_config.enable_sleep_mode:
++            from vllm.device_allocator.cumem import CuMemAllocator
++
++            allocator = CuMemAllocator.instance
++            if allocator is not None:
++                allocator.release_pools()
+ 
+ 
+ def init_worker_distributed_environment(

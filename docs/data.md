@@ -9,8 +9,6 @@
 | `data/rl/paraagent-rl/{train,validation}.{jsonl,parquet}` | RL source files |
 | `data/rl/paraagent-rl/{state,full_db,policies}/` | Simia task states, databases and policies |
 | `data/toolenv/` | Tool catalog, index, caches and dependency graph |
-| `data/benchmarks/toolbench/` | Queries, retrieval corpus/index, schemas and cache |
-| `data/benchmarks/apibank/` | Level-3 queries, tool corpus/index, Python APIs and databases |
 
 Use matching schemas, indexes, caches and graphs. See [bundle notes](../data/README.md) and [index building](inference.md#build-retrieval-indexes).
 
@@ -24,6 +22,20 @@ hf download ShengbinYue/paraagent-sft paraagent-sft.jsonl \
 ```
 
 `data/dataset_info.json` registers ParaAgent's ShareGPT conversations and ToolEnv's Alpaca examples.
+
+## ToolEnv runtime resources
+
+Place the following files directly in `data/toolenv/` (relative to the repository root). Keep the catalog and its index together; the two response caches must come from the matching prepared companion bundle.
+
+| File | Purpose |
+|---|---|
+| `toolcorpus_all.tsv` | Retrieval corpus |
+| `name_tool.tsv` | Tool-name catalog used by the simulator |
+| `tool-corpus_all_index_HNSW64.bin` and `.bin.meta` | Retrieval index and its corpus/index checksums |
+| `dependency-relations.jsonl` | Tool-dependency graph |
+| `cache_flat.pkl` and `cache_variants.pkl` | Simulator response caches |
+
+The catalog, index and dependency graph are staged for the [ToolEnv resources dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-resources), but its public download is pending. The response caches are not in that staged dataset. Use the prepared local companion bundle for all seven files until their distribution is available. Do not mix an index or cache with a different catalog snapshot.
 
 ## RL data
 
@@ -44,4 +56,4 @@ The converter creates both Parquet splits using [`configs/prompts/paraagent.txt`
 bash scripts/train/paraagent-rl.sh --check
 ```
 
-This checks required resources without training. `data/manifest.json` records companion-bundle checksums; regenerated files may differ. Use serialized caches from trusted sources.
+This checks required resources without training. Use serialized caches from trusted sources.

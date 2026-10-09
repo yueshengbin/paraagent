@@ -1,0 +1,37 @@
+# Run from the repository root in paraagent-rl (Python 3.12).
+# Prepare the pinned, patched third_party/verl checkout first; see docs/installation.md.
+-e .[rl]
+-e third_party/verl
+
+# Key dependency versions. Other transitive dependencies are resolved by pip.
+torch==2.8.0
+torchvision==0.23.0
+torchaudio==2.8.0
+transformers==4.56.1
+vllm==0.11.0
+ray==2.55.0
+hydra-core==1.3.2
+omegaconf==2.3.0
+tensordict==0.10.0
+datasets==4.8.4
+pandas==3.0.2
+pyarrow==23.0.1
+openai==1.99.1
+numpy==1.26.4
+# OpenCV 4.12+ requires numpy>=2 on supported Python versions.
+opencv-python-headless==4.11.0.86
+pydantic==2.13.1
+fastapi==0.135.3
+uvicorn==0.44.0
+multiprocess==0.70.19
+codetiming==1.4.0
+accelerate==1.13.0
+peft==0.19.0
+flashinfer-python==0.3.1
+
+# Use the Linux wheel that bundles libsndfile for Transformers audio imports.
+soundfile==0.13.1
+ninja
+packaging
+
+# Install flash-attn==2.8.1 separately after torch; see docs/installation.md.

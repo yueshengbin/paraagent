@@ -41,6 +41,8 @@ We introduce **ParaAct**, a structured parallel-action loop that combines phase-
 
 **ParaAgent** learns this loop from multi-agent cold-start demonstrations followed by reinforcement learning with multi-level advantage decoupling. Explicit phase plans expose structural decisions, while step-, phase- and trajectory-level rewards supervise protocol compliance, dependency-aware coordination and task outcomes. Training is supported by **ToolEnv**, a scalable simulator built from realistic tool interfaces and request-response interactions.
 
+This code release contains training, ToolEnv and ParaAct components. ToolBench and API-Bank evaluation code and benchmark data are not included.
+
 <div align="center">
 <img src="assets/method-overview.png" alt="Overview of the ParaAgent framework" width="100%">
 </div>
@@ -69,16 +71,15 @@ paraagent/
 │   ├── rewards/           trajectory, phase and format rewards
 │   ├── toolenv/           ToolEnv runtime, simulator and retrieval service
 │   ├── paraact/           inference loop, protocols and model clients
-│   ├── evaluation/        ToolBench and API-Bank adapters and scorers
 │   └── data/              portable data validation
 ├── sft/LLaMA-Factory/     pinned SFT training-source snapshot
-├── configs/               training, runtime, prompt and evaluation settings
+├── configs/               training, runtime and prompt settings
 ├── scripts/
 │   ├── train/             ToolEnv SFT, ParaAgent SFT/RL and export launchers
 │   ├── serve/             ToolEnv, policy and judge serving launchers
 │   ├── data/              RL JSONL-to-Parquet conversion and retrieval indexing
 │   └── setup/             isolated vLLM CuMem compatibility build
-├── data/                  training data, benchmark data and runtime resources
+├── data/                  dataset registry and download notes
 ├── patches/               pinned verl and vLLM runtime patches
 ├── requirements/          SFT/serving and RL dependencies with key versions pinned
 └── docs/                  installation and usage guides
@@ -90,7 +91,7 @@ Prepare the framework environment first, check the data, then run the correspond
 
 | Environment | Frameworks | Used for |
 |---|---|---|
-| `paraagent` | LLaMA-Factory + DeepSpeed; vLLM 0.19.0 | both SFT stages, model services, retrieval and evaluation |
+| `paraagent` | LLaMA-Factory + DeepSpeed; vLLM 0.19.0 | both SFT stages, model services and retrieval |
 | `paraagent-rl` | pinned verl + vLLM 0.11.0 | RL training and policy rollouts |
 
 Follow the [installation guide](docs/installation.md) to create the environments and run the setup checks. ParaAgent SFT and ToolEnv SFT share `paraagent` with the standalone model services. Each service runs in a separate process with its own GPU assignment. RL calls these services over HTTP; its rollout engine stays inside `paraagent-rl`.
@@ -173,103 +174,19 @@ Default service endpoints are:
 
 | Service | Endpoint | Used by |
 |---|---|---|
-| ToolEnv simulator | `http://127.0.0.1:12345/v1` | RL and ToolBench cache misses |
+| ToolEnv simulator | `http://127.0.0.1:12345/v1` | RL |
 | ParaAgent policy | `http://127.0.0.1:8000/v1` | ParaAct inference |
 | RL answer judge | `http://127.0.0.1:22456/v1` | RL reward computation |
 
-Start the retriever for the required catalog:
+Start the ToolEnv retriever:
 
 ```bash
 toolenv-retriever --catalog toolenv --port 30400
-toolenv-retriever --catalog toolbench --port 30401
-toolenv-retriever --catalog apibank --port 30403
 ```
 
 The retriever uses the prepared BGE-large-en-v1.5 index. Set `--model BAAI/bge-large-en-v1.5` explicitly when required. To generate embeddings and indexes from the tool corpora, see [Build retrieval indexes](docs/inference.md#build-retrieval-indexes).
 
 See [runtime services and inference](docs/inference.md) for service parameters and runtime behavior.
-
-## Evaluation
-
-Activate `paraagent` for inference and scoring. The released evaluation suite covers ToolBench and API-Bank Level-3.
-
-### GPT API configuration
-
-GPT-ReAct inference and the ToolBench judge read credentials from environment variables. No real key is stored in the repository.
-
-Create a local configuration:
-
-```bash
-cp .env.example .env
-```
-
-Fill in `.env`:
-
-```dotenv
-OPENAI_API_KEY=your-api-key
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4.1-2025-04-14
-EVAL_MODEL=gpt-4.1-2025-04-14
-```
-
-Load it into the current shell:
-
-```bash
-set -a
-source .env
-set +a
-```
-
-`OPENAI_MODEL` selects the GPT-ReAct model. `EVAL_MODEL` selects the ToolBench judge. `--model` and `--base-url` override the ReAct settings for one inference command. OpenAI-compatible endpoints are supported; include `/v1` when required by the provider. `.env` is ignored by Git.
-
-### ParaAgent
-
-ParaAgent is evaluated through ParaAct and does not use the baseline-only `--paradigm` argument.
-
-```bash
-paraact --agent paraagent --benchmark toolbench \
-  --retriever-url http://127.0.0.1:30401 \
-  --output outputs/toolbench-paraagent --runs 1
-
-paraact --agent paraagent --benchmark apibank \
-  --retriever-url http://127.0.0.1:30403 \
-  --output outputs/apibank-paraagent --runs 1
-```
-
-### GPT-ReAct baselines
-
-The same plain-text ReAct agent is evaluated under two paradigms:
-
-- `ETE`: retrieve the top-k tools once before execution and freeze the tool set (default: 3).
-- `EaE`: start with `search_tool` and alternate exploration and execution in one trajectory.
-
-```bash
-paraact --agent react --paradigm ETE --benchmark toolbench \
-  --retriever-url http://127.0.0.1:30401 \
-  --output outputs/toolbench-react-ETE --runs 1
-
-paraact --agent react --paradigm EaE --benchmark toolbench \
-  --retriever-url http://127.0.0.1:30401 \
-  --output outputs/toolbench-react-EaE --runs 1
-```
-
-The GPT baseline uses the text protocol `Thought / Action / Action Input / Observation`; it does not use native API function calling.
-
-### Scoring
-
-```bash
-paraagent-eval --benchmark toolbench \
-  --predictions outputs/toolbench-paraagent --runs run-1
-
-paraagent-eval --benchmark apibank \
-  --predictions outputs/apibank-paraagent --runs run-1
-```
-
-ToolBench scoring uses the GPT completeness judge and therefore needs the GPT API configuration above. API-Bank scoring uses deterministic one-to-one API-name/input matching and does not need a GPT judge. Use `--limit` only for inference smoke tests; the scorer requires a complete benchmark run.
-
-Predictions are written under `run-N/<split>/<query_id>_Agent@1.json`. Existing prediction files are reused when resuming the same output directory.
-
-See [evaluation](docs/evaluation.md) for metrics, output fields, token accounting and multi-run scoring.
 
 ## Configuration reference
 
@@ -281,7 +198,6 @@ See [evaluation](docs/evaluation.md) for metrics, output fields, token accountin
 | ToolEnv runtime | `configs/toolenv/runtime.yaml` |
 | ToolEnv simulator | `configs/toolenv/simulator.yaml` |
 | ParaAgent system prompt | `configs/prompts/paraagent.txt` |
-| Local GPT API template | `.env.example` |
 
 ## Acknowledgements
 

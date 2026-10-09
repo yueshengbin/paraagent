@@ -1,0 +1,34 @@
+# ParaAgent rollout overrides; other values inherit from verl.
+mode: async
+
+# Expose the vLLM sleep-mode switch to Hydra overrides.
+enable_sleep_mode: true
+
+# Agent-flow rollout settings.
+agent:
+  _target_: paraagent.training.config.AgentFlowConfig
+
+  # Agent-flow worker count.
+  num_workers: 8
+
+  # Used when the dataset omits agent_name.
+  default_agent_flow: agent_env_loop
+
+  # Optional custom agent-flow configuration.
+  agent_flow_config_path: null
+
+  # Maximum interaction steps per trajectory.
+  max_steps: 10
+
+  # Skip special tokens when decoding responses.
+  skip_special_tokens: true
+
+  # Optional custom asynchronous server.
+  custom_async_server:
+    _target_: verl.workers.config.CustomAsyncServerConfig
+
+    # Implementation module path.
+    path: null
+
+    # Implementation class name.
+    name: null

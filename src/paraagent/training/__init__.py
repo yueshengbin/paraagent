@@ -1,0 +1,3 @@
+from .runtime_compat import patch_multiprocess_tracker_lock
+
+patch_multiprocess_tracker_lock()

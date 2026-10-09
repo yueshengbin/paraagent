@@ -1,0 +1,73 @@
+diff --git a/verl/trainer/config/algorithm.py b/verl/trainer/config/algorithm.py
+index 99fb6f98..27d1a3e9 100644
+--- a/verl/trainer/config/algorithm.py
++++ b/verl/trainer/config/algorithm.py
+@@ -667,8 +667,6 @@ class AlgoConfig(BaseConfig):
+     # gdpo_reward_weights: per-dimension weights for aggregation (default: equal weights).
+     gdpo_reward_keys: Optional[list[str]] = None
+     gdpo_reward_weights: Optional[list[float]] = None
+-
+-
+ @dataclass
+ class DiffusionAlgoConfig(BaseConfig):
+     """Diffusion-specific algorithm config."""
+diff --git a/verl/utils/logger/aggregate_logger.py b/verl/utils/logger/aggregate_logger.py
+index d29698ac..cfb343da 100644
+--- a/verl/utils/logger/aggregate_logger.py
++++ b/verl/utils/logger/aggregate_logger.py
+@@ -18,14 +18,23 @@ A Ray logger will receive logging info from different processes.
+ import datetime
+ import logging
+ import numbers
++import os
+ import pprint
+ 
+ import torch
+ 
++# Filter console keys without changing file or wandb metrics.
++# Set VERL_CONSOLE_SKIP_PREFIXES to a comma-separated prefix list.
++_CONSOLE_SKIP_PREFIXES = tuple(
++    p.strip() for p in os.environ.get("VERL_CONSOLE_SKIP_PREFIXES", "").split(",") if p.strip()
++)
+ 
+-def concat_dict_to_str(dict: dict, step):
++
++def concat_dict_to_str(dict: dict, step, skip_prefixes: tuple = ()):
+     output = [f"step:{step}"]
+     for k, v in dict.items():
++        if skip_prefixes and isinstance(k, str) and k.startswith(skip_prefixes):
++            continue
+         if isinstance(v, numbers.Number):
+             output.append(f"{k}:{pprint.pformat(v)}")
+     output_str = " - ".join(output)
+@@ -48,7 +57,7 @@ class LocalLogger:
+ 
+     def log(self, data, step):
+         if self.print_to_console:
+-            print(concat_dict_to_str(data, step=step), flush=True)
++            print(concat_dict_to_str(data, step=step, skip_prefixes=_CONSOLE_SKIP_PREFIXES), flush=True)
+ 
+ 
+ class DecoratorLoggerBase:
+diff --git a/verl/workers/rollout/vllm_rollout/utils.py b/verl/workers/rollout/vllm_rollout/utils.py
+index 520b3719..db3cc15f 100644
+--- a/verl/workers/rollout/vllm_rollout/utils.py
++++ b/verl/workers/rollout/vllm_rollout/utils.py
+@@ -366,7 +366,7 @@ def build_cli_args_from_config(config: dict[str, Any]) -> list[str]:
+     Handles different value types appropriately:
+     - None: skipped
+     - bool True: adds '--key'
+-    - bool False: skipped
++    - bool False: adds '--no-key' for BooleanOptionalAction flags
+     - list: expands to '--key item1 item2 ...'
+     - empty list: skipped (vLLM uses nargs="+" which requires at least one value)
+     - dict: JSON serialized
+@@ -385,6 +385,8 @@ def build_cli_args_from_config(config: dict[str, Any]) -> list[str]:
+         if isinstance(v, bool):
+             if v:
+                 cli_args.append(f"--{k}")
++            else:
++                cli_args.append(f"--no-{k}")
+         elif isinstance(v, list):
+             if not v:
+                 # Skip empty lists - vLLM uses nargs="+" which requires at least one value

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paraagent"
+version = "0.1.0"
+description = "ParaAgent: Reinforcing Parallel Acting in Open-World Tool Environments"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = ["numpy", "pandas", "pyarrow", "PyYAML", "requests", "httpx", "openai", "jsonschema", "referencing", "tqdm", "termcolor", "tenacity", "pydantic"]
+
+[project.optional-dependencies]
+rl = ["hydra-core", "omegaconf", "ray[default]", "torch", "transformers", "datasets", "tensordict", "aiohttp", "codetiming", "multiprocess", "Pillow"]
+retrieval = ["faiss-cpu", "FlagEmbedding", "fastapi", "uvicorn"]
+
+[project.scripts]
+paraagent-rl = "paraagent.training.launch:main"
+toolenv-retriever = "paraagent.toolenv.retriever:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+paraagent = ["training/config/*.yaml", "training/config/overrides/*.yaml", "toolenv/runtime/tools/*.yml"]
