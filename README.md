@@ -49,12 +49,13 @@ We introduce **ParaAct**, a structured parallel-action loop that combines phase-
 
 ---
 
-**We will open-source the following resources:**
+**Resources**
 
 1. **Datasets**
-   - [ParaAgent SFT dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-sft).
-   - [ParaAgent RL dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-rl).
-   - [ToolEnv SFT dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft).
+   - [ParaAgent SFT dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-sft): 10,896 multi-turn demonstrations across ToolBench, Toucan and AFM for learning structured parallel tool use.
+   - [ParaAgent RL dataset](https://huggingface.co/datasets/ShengbinYue/paraagent-rl): 16,384 tasks across ToolBench, Toucan and Simia for training adaptive, dependency-aware tool use.
+   - [ToolEnv SFT dataset](https://huggingface.co/datasets/ShengbinYue/ToolEnv-sft): 243,445 API request–response examples for training the tool simulator (data files coming soon).
+
 2. **Models**
    - ParaAgent-4B model weights — coming soon.
    - ToolEnv-14B model weights — coming soon.
