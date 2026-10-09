@@ -144,7 +144,7 @@ bash scripts/train/paraagent-rl.sh --check
 bash scripts/train/paraagent-rl.sh
 ```
 
-The paper-aligned preset uses eight H200 GPUs, a prompt batch of 256, two epochs, eight rollouts per prompt and at most 15 reasoning/action turns, for 128 outer updates. Training outputs go to `outputs/paraagent-rl`.
+The paper-aligned preset uses 8 H200 GPUs, a prompt batch of 256, two epochs, eight rollouts per prompt and at most 15 reasoning/action turns, for 128 outer updates. Training outputs go to `outputs/paraagent-rl`.
 
 Export a selected FSDP actor checkpoint for serving:
 
