@@ -14,7 +14,7 @@ Zhongyu Wei<sup>1,2</sup>
 <sup>1</sup> Fudan University ·
 <sup>2</sup> Shanghai Innovation Institute ·
 <sup>3</sup> University of Edinburgh ·
-<sup>4</sup> The Chinese University of Hong Kong ·
+<sup>4</sup> Chinese University of Hong Kong ·
 <sup>5</sup> Huazhong University of Science and Technology ·
 <sup>6</sup> vivo AI
 </sub></p>
